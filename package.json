@@ -1,0 +1,16 @@
+{
+    "scripts": {
+        "build": "go build",
+        "prepare": "npx husky",
+        "test": "npm run build && go test -race"
+    },
+    "engines": {
+        "node": ">=20"
+    },
+    "prettier": {
+        "tabWidth": 4
+    },
+    "dependencies": {
+        "husky": "^9.0.11"
+    }
+}
