@@ -69,12 +69,12 @@ lowercase = 'a'..'z'
 uppercase = 'A'..'Z'
 letter = lowercase | uppercase
 alphanumeric = letter | digit
-whitespace = /\s/
-any = /./ | '\n'
-comment = "(*" {any - "*)"} "*)"
+whitespace = /^\s/
+any = /^./ | '\n'
+Comment = ^"(*" {any - "*)"} ^"*)"
 
 (* This _ rule is used for parsing optional whitespace. *)
-_ = {whitespace|comment}
+_ = {whitespace|Comment}
 
 (* Core language rules. *)
 Identifier = letter | '_' {alphanumeric | '_'} _
