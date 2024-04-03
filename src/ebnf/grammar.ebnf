@@ -51,6 +51,9 @@
  *   - This regular expression is used like the regular expression in Go.
  * - The expression list is a list of expressions separated by spaces.
  * - Comments are enclosed in '(' '* and '*' ')'.
+ * - Errors can be written with a "@error" keyword followed by a string and optinally an expression which can be used for recovery. If an expression is speciefied, the parser will move the input until the expression can be parsed.
+ *   - For example: `@error "unexpected character"`. This will create an error and continue parsing.
+ *   - `?Identifier @error "unexpected identifier" Identifier` will create an error if an identifier was found and consumes it.
  * 
  *
  * Operators have the following increasing precedence:
@@ -71,15 +74,17 @@ letter = lowercase | uppercase
 alphanumeric = letter | digit
 whitespace = /^\s/
 any = /^./ | '\n'
+
 Comment = ^"(*" {any - "*)"} ^"*)"
 
 (* This _ rule is used for parsing optional whitespace. *)
 _ = {whitespace|Comment}
 
 (* Core language rules. *)
+stringLiteral = ^'"' {any - '"'} ^'"' 
 Identifier = letter | '_' {alphanumeric | '_'} _
 Char = ^'\'' any - '\'' ^'\'' _
-String = ^'"' {any - '"'} ^'"' <IgnoreCase:>['i'] _
+String = stringLiteral <IgnoreCase:>['i'] _
 
 (* Grammar rules. *)
 Grammar = _ {RuleStart ExpressionList}
@@ -91,12 +96,14 @@ BasicRuleStart = Identifier '=' _
 ExpressionList = Expression <Next>{!RuleStart Expression}
 Expression = DropExpression | NamedExpression 
            | NonConsumingExpression | NotExpression
-           | ConditionalExpression | OrExpression
+           | ConditionalExpression | ErrorExpression
+           | OrExpression
 DropExpression = ^'^' _ GroupedExpression
 NamedExpression = ^'<' _ Identifier ^":>" _ GroupedExpression
 NonConsumingExpression = ^'?' _ GroupedExpression
 NotExpression = ^'!' _ GroupedExpression
 ConditionalExpression = ^"@if"i _ ExpressionList ^"@then"i _ ExpressionList ^"@else"i _ ExpressionList
+ErrorExpression = ^"@error"i _ stringLiteral _ {ExpressionList}
 
 OrExpression = ExceptionExpression {^'|' _ ExceptionExpression}
 ExceptionExpression = ConcatExpression {^'-' _ ConcatExpression}
