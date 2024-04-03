@@ -1,70 +1,67 @@
 (* This is a simple grammar similar to the EBNF grammar.
- * Its use case is to generate a parser for a wide range of languages.
- * 
- * The language is defined in this file by itself.
- * That means it is self-hosting. 
- *
- * Here are the basic rules:
- * - A grammar file contains a list of rules.
- * - A rule is an identifier followed by an equal sign ('=') and an expression list.
- *   - The identifier is the name of the rule and the same rules used by Go.
- *   - Lower case identifier are **means to an end** and can be seen as some kind of macro or building blocks. They don't have use by them self but can be used for declarative naming and in other rules.
- *   - On the other hand are upper case identifier for naming the things you need.
- *   - When generating the Parser and the AST, the lower case identifiers are not included in the AST.
- *   - You can drop a expression from the AST by using the drop operator ('^') in front of the expression.
- *   - You can name a expression by using the name operator ("<" name ":>") in front of the expression.
- * - A rule can be generic by using the generic rule operator ("<" name(s) ">") in front of the rule.
- *   - The names are the generic parameters of the rule an can be used inside the rule definition.
- * - For the concationation of expressions, the space character (' ') is used.
- * - A rule is not be terminated by a semicolon or any other character.
- * - For alternations, the vertical bar ('|') is used.
- * - For optional expressions, square brackets ('[' expressions ']') are used.
- *   - The expressions inside the square brackets are optional (0 or 1).
- * - For repetition, curly braces ('{' expressions '}') are used.
- *   - The expressions inside the curly braces are repeated 0 or more times.
- * - For grouping, parentheses ('(' expressions ')') are used.
- * - For exceptions, the minus sign ('-') is used.
- *   - The expression on the left side of the minus sign is the main expression and the expression on the right side is the exception.
- *   - If the exception is matched, the main expression is not matched.
- * - To drop a expression from the AST, the caret ('^') is used in front of the expression.
- * - To name a expression, the name operator ("<" name ">") is used in front of the expression.
- * - To make a expression non-consuming, the question mark ('?') is used in front of the expression.
- *   - This means that the expression is not consumed when it is matched but can stil fail.
- * - To invert a expression, the exclamation mark ('!') is used in front of the expression.
- *   - This means if the right side of the expression is matched, the expression is not matched and not consumed.
- *   - If the right side of the expression is not matched, the expression is matched without consuming the input.
- * - A conditional expression is a sequence of expressions separated by the "@if", "@then", and "@else" keywords.
- *   - If the first expression between the "@if" and "then" keywords is matched, the second expression between the "@then" and "@else" keywords is used.
- *   - If the first expression between the "@if" and "then" keywords is not matched, the third expression after the "@else" keyword is used.
- * - A string is a sequence of characters enclosed in double quotes ('"').
- *   - You can use escape sequences in a string by using the backslash ('\') character.
- *   - This contains a valid Unicode sequence, just like strings in Go.
- *   - If a string ends with a 'i', the string is case insensitive. ("for example"i)
- * - A character is a single character enclosed in single quotes (''').
- *   - You can use escape sequences in a character by using the backslash ('\') character.
- *   - This contains exactly one valid Unicode character, just like runes in Go.
- * - A range is a sequence of characters enclosed in single quotes (''') and separated by two dots ('..').
- *   - The range is inclusive, meaning that the characters on both sides of the range are included.
- *   - The range is only valid for characters.
- *   - This operator works like the range operator in Kotlin.
- * - A regular expression is a sequence of characters enclosed in forward slashes ('/').
- *   - This regular expression is used like the regular expression in Go.
- * - The expression list is a list of expressions separated by spaces.
- * - Comments are enclosed in '(' '* and '*' ')'.
- * - Errors can be written with a "@error" keyword followed by a string and optinally an expression which can be used for recovery. If an expression is speciefied, the parser will move the input until the expression can be parsed.
- *   - For example: `@error "unexpected character"`. This will create an error and continue parsing.
- *   - `?Identifier @error "unexpected identifier" Identifier` will create an error if an identifier was found and consumes it.
- * 
- *
- * Operators have the following increasing precedence:
- * - `=`
- * - `|`
- * - `-`
- * - `..`
- * 
- *
- * This file is an example of a grammar file.
- *) 
+Its use case is to generate a parser for a wide range of languages.
+
+The language is defined in this file by itself.
+That means it is self-hosting. 
+
+Here are the basic rules:
+- A grammar file contains a list of rules.
+- A rule is an identifier followed by an equal sign ('=') and an expression list.
+  - The identifier is the name of the rule and the same rules used by Go.
+  - Lower case identifier are **means to an end** and can be seen as some kind of macro or building blocks. They don't have use by them self but can be used for declarative naming and in other rules.
+  - On the other hand are upper case identifier for naming the things you need.
+  - When generating the Parser and the AST, the lower case identifiers are not included in the AST.
+  - You can drop a expression from the AST by using the drop operator ('^') in front of the expression.
+  - You can name a expression by using the name operator ("<" name ":>") in front of the expression.
+- A rule can be generic by using the generic rule operator ("<" name(s) ">") in front of the rule.
+  - The names are the generic parameters of the rule an can be used inside the rule definition.
+- For the concationation of expressions, the space character (' ') is used.
+- A rule is not be terminated by a semicolon or any other character.
+- For alternations, the vertical bar ('|') is used.
+- For optional expressions, square brackets ('[' expressions ']') are used.
+  - The expressions inside the square brackets are optional (0 or 1).
+- For repetition, curly braces ('{' expressions '}') are used.
+  - The expressions inside the curly braces are repeated 0 or more times.
+- For grouping, parentheses ('(' expressions ')') are used.
+- For exceptions, the minus sign ('-') is used.
+  - The expression on the left side of the minus sign is the main expression and the expression on the right side is the exception.
+  - If the exception is matched, the main expression is not matched.
+- To drop a expression from the AST, the caret ('^') is used in front of the expression.
+- To name a expression, the name operator ("<" name ">") is used in front of the expression.
+- To make a expression non-consuming, the question mark ('?') is used in front of the expression.
+  - This means that the expression is not consumed when it is matched but can stil fail.
+- To invert a expression, the exclamation mark ('!') is used in front of the expression.
+  - This means if the right side of the expression is matched, the expression is not matched and not consumed.
+  - If the right side of the expression is not matched, the expression is matched without consuming the input.
+- A conditional expression is a sequence of expressions separated by the "@if", "@then", and "@else" keywords.
+  - If the first expression between the "@if" and "then" keywords is matched, the second expression between the "@then" and "@else" keywords is used.
+  - If the first expression between the "@if" and "then" keywords is not matched, the third expression after the "@else" keyword is used.
+- A string is a sequence of characters enclosed in double quotes ('"').
+  - You can use escape sequences in a string by using the backslash ('\') character.
+  - This contains a valid Unicode sequence, just like strings in Go.
+  - If a string ends with a 'i', the string is case insensitive. ("for example"i)
+- A character is a single character enclosed in single quotes (''').
+  - You can use escape sequences in a character by using the backslash ('\') character.
+  - This contains exactly one valid Unicode character, just like runes in Go.
+- A range is a sequence of characters enclosed in single quotes (''') and separated by two dots ('..').
+  - The range is inclusive, meaning that the characters on both sides of the range are included.
+  - The range is only valid for characters.
+  - This operator works like the range operator in Kotlin.
+- A regular expression is a sequence of characters enclosed in forward slashes ('/').
+  - This regular expression is used like the regular expression in Go.
+- The expression list is a list of expressions separated by spaces.
+- Comments are enclosed in '(' '* and '*' ')'.
+- Errors can be written with a "@error" keyword followed by a string and optinally an expression which can be used for recovery. If an expression is speciefied, the parser will move the input until the expression can be parsed.
+  - For example: `@error "unexpected character"`. This will create an error and continue parsing.
+  - `?Identifier @error "unexpected identifier" Identifier` will create an error if an identifier was found and consumes it.
+
+Operators have the following increasing precedence:
+- `=`
+- `|`
+- `-`
+- `..`
+
+This file is also an example of a grammar file. *) 
 
 (* Basic rules. *)
 digit = '0'..'9'
